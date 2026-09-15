@@ -181,6 +181,9 @@ VENCIMIENTOS
         .filter(r => cellValue(r, idxDomicilio) && cellValue(r, idxServicio)) // exige al menos Nombre y Link
         .map(r => {
           const domicilioRaw = cellValue(r, idxDomicilio);
+
+          const servicioRaw = cellValue(r, idxServicio);
+          
           const urlRaw = cellValue(r, idxURL);
           const bdRaw = cellValue(r, idxBD);
           const anioRaw = cellValue(r, idxAnio) || EMPTY_PLACEHOLDER;
