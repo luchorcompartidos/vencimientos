@@ -116,6 +116,16 @@ VENCIMIENTOS
   
   const HEADER_SERVICIO = "Servicio";
 
+  
+  const HEADER_VENC1 = "1erVencimiento";
+  const HEADER_VENC2 = "2doVencimiento";
+  const HEADER_IMPORTE1 = "Importe1";
+  const HEADER_IMPORTE2 = "Importe2";
+  const HEADER_PAGO = "Pago"
+  const HEADER_FECHAPAGO = "Fecha de Pago";
+  const HEADER_IMPORTEP = "ImporteP";
+  
+
   const HEADER_STUDIO = "Link Studio.softr.io";
 
   const HEADER_ESTADO = "Estado";
@@ -169,6 +179,16 @@ VENCIMIENTOS
       const idxAnio = findColIndex(cols, HEADER_ANIO);
       const idxAlbum = findColIndex(cols, HEADER_ALBUM);
 
+
+      const idxVenc1 = findColIndex(cols, HEADER_VENC1);
+      const idxVenc2 = findColIndex(cols, HEADER_VENC2);
+      const idxImporte1 = findColIndex(cols, HEADER_IMPORTE1);
+      const idxImporte2 = findColIndex(cols, HEADER_IMPORTE2);
+      const idxPago = findColIndex(cols, HEADER_PAGO);
+      const idxFechapago = findColIndex(cols, HEADER_FECHAPAGO);
+      const idxImportep" = findColIndex(cols, HEADER_IMPORTEP;
+  
+      
       const idxStudio = findColIndex(cols, HEADER_STUDIO);
 
       const idxEstado = findColIndex(cols, HEADER_ESTADO);
@@ -192,13 +212,23 @@ VENCIMIENTOS
           const albumRaw = cellValue(r, idxAlbum) || EMPTY_PLACEHOLDER;
           const esAlbumLink = /^https?:\/\//i.test(albumRaw);
 
-          const studioRaw = cellValue(r, idxStudio) || EMPTY_PLACEHOLDER;
-
+  
+          const venc1Raw = cellValue(r, idxVenc1) || EMPTY_PLACEHOLDER;
+          const venc2Raw = cellValue(r, idxVenc2) || EMPTY_PLACEHOLDER;
+          const importe1Raw = cellValue(r, idxImporte1) || EMPTY_PLACEHOLDER;
+          const importe2Raw = cellValue(r, idxImporte2) || EMPTY_PLACEHOLDER;
+          const pagoRaw = cellValue(r, idxPago) || EMPTY_PLACEHOLDER;
+          const fechapagoRaw = cellValue(r, idxFechapago) || EMPTY_PLACEHOLDER;
+          const importepRaw = cellValue(r, idxImportep) || EMPTY_PLACEHOLDER;
+        
+          
+          const studioRaw = cellValue(r, idxStudio) || EMPTY_PLACEHOLDER;         
           const esStudioLink = /^https?:\/\//i.test(studioRaw);
 
           const estadoRaw = cellValue(r, idxEstado) || EMPTY_PLACEHOLDER;
           
-      
+
+          
           const domicilio = escapeHtml(domicilioRaw);
 
           const servicio = escapeHtml(servicioRaw);
@@ -207,6 +237,17 @@ VENCIMIENTOS
           const bd = escapeHtml(bdRaw);
           const anio = escapeHtml(anioRaw);
           const album = escapeHtml(albumRaw);
+          
+          
+          const venc1 = escapeHtml(venc1Raw);
+          const venc2 = escapeHtml(venc2Raw);
+          const importe1 = escapeHtml(importe1Raw);
+          const importe2 = escapeHtml(importe2Raw);
+          const pago = escapeHtml(pagoRaw);
+          const fechapago = escapeHtml(fechapagoRaw);
+          const importep = escapeHtml(importepRaw);
+
+                    
           const studio = escapeHtml(studioRaw);
           const estado = escapeHtml(estadoRaw);
           
@@ -218,6 +259,20 @@ VENCIMIENTOS
               <span class="extra-field"><strong>Servicio:</strong> ${servicio}</span>
               
               <span class="raw-url">"${url}"</span>
+
+
+              <span class="extra-field"><strong>1er Vencimiento:</strong> ${venc1}</span>
+              <span class="extra-field"><strong>Importe 1er Vto.:</strong> ${importe1}</span>
+
+              <span class="extra-field"><strong>2do Vencimiento:</strong> ${venc2}</span>              
+              <span class="extra-field"><strong>Importe 2do Vto.:</strong> ${importe2}</span>
+
+              <span class="raw-url">"${pago}"</span>
+
+              <span class="extra-field"><strong>Fecha Pagado:</strong> ${fechap}</span>              
+              <span class="extra-field"><strong>Importe Pagado.:</strong> ${importep}</span>
+
+              
               <!-- <a href="${bd}" target="_blank" rel="noopener">${domicilio}</a> -->
               <span class="extra-field"><strong>BasedeDatos: </strong><a href="${bd}" target="_blank" rel="noopener">${domicilio}</a></span>
               
