@@ -112,7 +112,7 @@ VENCIMIENTOS
   const HEADER_URL = "URL";
   const HEADER_BD = "Link BasedeDatos Softr";
   const HEADER_ANIO = "Año";
-  const HEADER_ALBUM = "Album Spotify";
+  const HEADER_ALBUM = "Álbum Spotify";
   
   const HEADER_SERVICIO = "Servicio";
 
@@ -121,7 +121,7 @@ VENCIMIENTOS
   const HEADER_ESTADO = "Estado";
   
 
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}`;
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}&headers=1`;
 
   const statusEl = document.getElementById("sheet-sync-status");
   const timeEl = document.getElementById("sheet-sync-time");
