@@ -6,7 +6,7 @@ VENCIMIENTOS
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOFTR APPS - Sincronizado</title>
+<title>Vencimientos Servicios/Cuentas - Sincronizado</title>
 <style>
   body {
     font-family: -apple-system, Segoe UI, Roboto, sans-serif;
@@ -89,7 +89,7 @@ VENCIMIENTOS
 <body>
 
 <div id="sheet-sync-container">
-  <h1>SOFTR APPS</h1>
+  <h1>VENCIMIENTOS SERVICIOS</h1>
   <div class="sheet-sync-header">
     <span>Última sincronización: <span id="sheet-sync-time">—</span></span>
     <button id="sheet-sync-refresh">Actualizar ahora</button>
@@ -108,11 +108,11 @@ VENCIMIENTOS
 
   // Nombres de encabezado tal como figuran en la fila 1 de la planilla.
   // El código busca estas columnas por nombre, sin importar en qué posición estén.
-  const HEADER_APP = "App";
+  const HEADER_DOMICILIO = "Domicilio";
   const HEADER_URL = "URL";
   const HEADER_BD = "Link BasedeDatos Softr";
   const HEADER_ANIO = "Año";
-  const HEADER_ALBUM = "Álbum Spotify";
+  const HEADER_SERVICIO = "Servicio";
 
   const HEADER_STUDIO = "Link Studio.softr.io";
 
@@ -158,7 +158,10 @@ VENCIMIENTOS
       const cols = json.table.cols;
 
       // Ubicación dinámica de columnas por nombre de encabezado
-      const idxApp = findColIndex(cols, HEADER_APP);
+      const idxDomicilio = findColIndex(cols, HEADER_DOMICILIO);
+
+      const idxServicio = findColIndex(cols, HEADER_SERVICIO);
+      
       const idxURL = findColIndex(cols, HEADER_URL);
       const idxBD = findColIndex(cols, HEADER_BD);
       const idxAnio = findColIndex(cols, HEADER_ANIO);
@@ -169,15 +172,15 @@ VENCIMIENTOS
       const idxEstado = findColIndex(cols, HEADER_ESTADO);
 
       
-      if (idxApp === -1 || idxURL === -1) {
-        statusEl.textContent = `No se encontraron las columnas "${HEADER_APP}" y/o "${HEADER_URL}" en la planilla.`;
+      if (idxDomicilio === -1 || idxServicio === -1) {
+        statusEl.textContent = `No se encontraron las columnas "${HEADER_DOMICILIO}" y/o "${HEADER_SERVICIO}" en la planilla.`;
         return;
       }
 
       listEl.innerHTML = rows
-        .filter(r => cellValue(r, idxApp) && cellValue(r, idxURL)) // exige al menos Nombre y Link
+        .filter(r => cellValue(r, idxDomicilio) && cellValue(r, idxServicio)) // exige al menos Nombre y Link
         .map(r => {
-          const appRaw = cellValue(r, idxApp);
+          const domicilioRaw = cellValue(r, idxDomicilio);
           const urlRaw = cellValue(r, idxURL);
           const bdRaw = cellValue(r, idxBD);
           const anioRaw = cellValue(r, idxAnio) || EMPTY_PLACEHOLDER;
@@ -191,7 +194,10 @@ VENCIMIENTOS
           const estadoRaw = cellValue(r, idxEstado) || EMPTY_PLACEHOLDER;
           
       
-          const app = escapeHtml(appRaw);
+          const domicilio = escapeHtml(domicilioRaw);
+
+          const servicio = escapeHtml(servicioRaw);
+          
           const url = escapeHtml(urlRaw);
           const bd = escapeHtml(bdRaw);
           const anio = escapeHtml(anioRaw);
@@ -202,10 +208,13 @@ VENCIMIENTOS
 
           return `
             <div class="record">
-              <a href="${url}" target="_blank" rel="noopener">${app}</a>
+              <a href="${url}" target="_blank" rel="noopener">${domicilio}</a>
+
+              <span class="extra-field"><strong>Servicio:</strong> ${servicio}</span>
+              
               <span class="raw-url">"${url}"</span>
-              <!-- <a href="${bd}" target="_blank" rel="noopener">${app}</a> -->
-              <span class="extra-field"><strong>BasedeDatos: </strong><a href="${bd}" target="_blank" rel="noopener">${app}</a></span>
+              <!-- <a href="${bd}" target="_blank" rel="noopener">${domicilio}</a> -->
+              <span class="extra-field"><strong>BasedeDatos: </strong><a href="${bd}" target="_blank" rel="noopener">${domicilio}</a></span>
               
               <span class="extra-field"><strong>Año:</strong> ${anio}</span>
               <span class="extra-field"><strong>A:</strong> ${esAlbumLink ? `<a href="${album}" target="_blank" rel="noopener">${album}</a>` : album}</span>
