@@ -8,12 +8,77 @@ VENCIMIENTOS NEW (Con AJUSTE Función Formateo Fechas DATE)
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vencimientos Servicios/Cuentas - Sincronizado</title>
 <style>
+
+
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  
+  
   body {
     font-family: -apple-system, Segoe UI, Roboto, sans-serif;
     background: #fafafa;
     margin: 0;
     padding: 30px 16px;
   }
+
+
+
+
+
+  /* ===== Sección "Tablas LR" ===== */
+  #tablr-section {
+    max-width: 700px;
+    margin: 0 auto;
+    display: none; /* se muestra por JS solo si hay contenido que mostrar */
+  }
+  #tablr-section.tablr-visible {
+    display: block;
+  }
+  #tablr-heading {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a2b1a;
+    margin: 0 0 8px 0;
+    display: none; /* se muestra por JS solo si hay al menos un enlace */
+  }
+  #tablr-heading.tablr-visible {
+    display: block;
+  }
+  #tablr-headingH4 {
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    margin: 0 0 12px 0;
+  }
+  #tablr-links .tablr-link {
+    display: block;
+    font-size: 14px;
+    color: #1a73e8;
+    text-decoration: none;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+  }
+  #tablr-links .tablr-link:last-child { margin-bottom: 0; }
+  #tablr-links .tablr-link:hover { text-decoration: underline; background: #f7faff; }
+  #tablr-status {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 6px;
+    min-height: 14px;
+  }
+  #tablr-status:empty { margin-bottom: 0; }
+
+
+
+
+  
   #sheet-sync-container {
     max-width: 700px;
     margin: 0 auto;
@@ -86,8 +151,22 @@ VENCIMIENTOS NEW (Con AJUSTE Función Formateo Fechas DATE)
   }
 </style>
 </head>
+
 <body>
 
+
+
+
+<div id="tablr-section">
+  <h2 id="tablr-heading">Tablas LR</h2>
+  <h4 id="tablr-headingH4">Hojas/Sheets cuyo nombre contiene el string "tabLR"</h4>
+  <div id="tablr-status"></div>
+  <div id="tablr-links"></div>
+</div>
+
+
+
+  
 <div id="sheet-sync-container">
   <h1>VENCIMIENTOS SERVICIOS</h1>
   <div class="sheet-sync-header">
@@ -98,6 +177,148 @@ VENCIMIENTOS NEW (Con AJUSTE Función Formateo Fechas DATE)
   <div id="sheet-sync-list"></div>
 </div>
 
+
+
+
+
+<script>
+(function () {
+  // ============================================================
+  //  SECCIÓN "TABLAS LR"
+  // ============================================================
+  // Lee TODAS las hojas ("Sheets") del archivo de Google Drive
+  // identificado por SHEET_ID (no solo una hoja puntual) y, para
+  // cada una cuyo nombre contenga "tabLR", arma y lista un
+  // hipervínculo con la estructura:
+  //   https://luchorcompartidos.github.io/tablaN/index.html?sheetId=<SHEET_ID>&gid=<GID_de_la_hoja>
+  // donde N es el número de orden secuencial (según la posición
+  // real de la pestaña dentro del archivo) entre las hojas que
+  // matchean "tabLR", y <GID_de_la_hoja> es el gid propio de esa
+  // pestaña puntual.
+  //
+  // Se usa la Google Sheets API v4 (sheets.googleapis.com), que sí
+  // soporta CORS para lectura pública y es el método vigente para
+  // leer metadatos (título y gid de cada pestaña) sin backend
+  // propio. Requiere una API key de Google Cloud con la "Google
+  // Sheets API" habilitada (no requiere OAuth para leer un archivo
+  // público; alcanza con restringir la key por dominio/referer).
+  // ------------------------------------------------------------
+ 
+  // ---- CONFIGURACIÓN: reemplazar por los valores propios ----
+  const SHEET_ID = "1dkGOT3XaPuHa8Kpj_UpD_sKkSGCs_1P5HyL_Z2IIcmQ";
+  const SHEETS_API_KEY = "AIzaSyA2Zs9dcx7mUf5kdHeziIneA2c_7BqJlKY"; // reemplazar por tu key
+  // -------------------------------------------------------------
+ 
+  const REFRESH_MS = 86400000; // vuelve a sincronizar cada 24 horas
+  const TABLR_KEYWORD = "tabLR";
+  // Estructura final del enlace generado para cada hoja "tabLR":
+  // https://luchorcompartidos.github.io/tablaN/index.html?sheetId=<SHEET_ID>&gid=<GID_de_la_hoja>
+  const TABLR_BASE_URL = "https://luchorcompartidos.github.io/tabla"; // + número secuencial (1, 2, 3...)
+ 
+  const SHEETS_METADATA_URL =
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}` +
+    `?key=${SHEETS_API_KEY}&fields=sheets.properties.title,sheets.properties.sheetId`;
+ 
+  const tablrSectionEl = document.getElementById("tablr-section");
+  const tablrHeadingEl = document.getElementById("tablr-heading");
+  const tablrStatusEl = document.getElementById("tablr-status");
+  const tablrLinksEl = document.getElementById("tablr-links");
+ 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+ 
+  async function syncTabLRLinks() {
+    tablrSectionEl.classList.add("tablr-visible");
+    tablrHeadingEl.classList.remove("tablr-visible");
+    tablrLinksEl.innerHTML = "";
+    tablrStatusEl.textContent = 'Buscando hojas "tabLR"...';
+ 
+    if (!SHEETS_API_KEY || SHEETS_API_KEY === "TU_API_KEY_DE_GOOGLE_CLOUD_AQUI") {
+      tablrStatusEl.textContent =
+        'Falta configurar SHEETS_API_KEY (ver comentario en el código) para poder listar las hojas "tabLR".';
+      return;
+    }
+ 
+    try {
+      const res = await fetch(SHEETS_METADATA_URL);
+      if (!res.ok) {
+        // Se intenta leer el cuerpo JSON de error que devuelve Google
+        // (suele traer error.message con el motivo exacto: key
+        // inválida, referer no permitido, API no habilitada, etc.)
+        let detail = `HTTP ${res.status}`;
+        try {
+          const errJson = await res.json();
+          if (errJson && errJson.error && errJson.error.message) {
+            detail = errJson.error.message;
+          }
+        } catch (parseErr) {
+          // el cuerpo no era JSON; nos quedamos con el código HTTP
+        }
+        throw new Error(detail);
+      }
+      const json = await res.json();
+      const sheetsMeta = json.sheets || [];
+ 
+      // El título de cada pestaña viene en sheet.properties.title, y su
+      // GID real dentro del archivo (el mismo que usa la URL nativa de
+      // Google Sheets como "#gid=...") viene en sheet.properties.sheetId.
+      // El orden de "sheetsMeta" respeta el orden real de las pestañas
+      // en el archivo de Drive (así lo devuelve la Sheets API v4), y
+      // "sheetEntries" conserva ese mismo orden al filtrar solo las que
+      // contienen "tabLR". Por eso el número secuencial de la URL
+      // (tabla1, tabla2, tabla3...) se asigna según la posición dentro
+      // de este arreglo ya filtrado, no según el nombre de la hoja.
+      const sheetEntries = sheetsMeta
+        .map(sheet => ({
+          name: (sheet.properties && sheet.properties.title) ? sheet.properties.title.trim() : "",
+          gid: (sheet.properties && sheet.properties.sheetId !== undefined && sheet.properties.sheetId !== null)
+            ? String(sheet.properties.sheetId)
+            : ""
+        }))
+        .filter(entry => entry.name.length > 0 && entry.name.includes(TABLR_KEYWORD));
+ 
+      if (sheetEntries.length === 0) {
+        tablrStatusEl.textContent = "";
+        tablrSectionEl.classList.remove("tablr-visible");
+        return;
+      }
+ 
+      tablrHeadingEl.classList.add("tablr-visible");
+      tablrLinksEl.innerHTML = sheetEntries
+        .map((entry, index) => {
+          const sequentialNumber = index + 1; // tabla1, tabla2, tabla3...
+          // SHEET_ID identifica el archivo completo; gid identifica la
+          // hoja/pestaña puntual dentro de ese archivo. Ambos se pasan
+          // como parámetros de consulta en la URL final.
+          const href = escapeHtml(
+            `${TABLR_BASE_URL}${sequentialNumber}/index.html?sheetId=${SHEET_ID}&gid=${entry.gid}`
+          );
+          return `<a class="tablr-link" href="${href}" target="_blank" rel="noopener">${escapeHtml(entry.name)}</a>`;
+        })
+        .join("");
+      tablrStatusEl.textContent = "";
+    } catch (err) {
+      // Se muestra el motivo real del error (referer bloqueado, API no
+      // habilitada, key inválida, etc.) en lugar de un mensaje genérico.
+      tablrStatusEl.textContent = `No se pudo obtener el listado de hojas "tabLR": ${err.message}`;
+      console.error(err);
+    }
+  }
+ 
+  syncTabLRLinks();
+  setInterval(syncTabLRLinks, REFRESH_MS);
+})();
+</script>
+
+
+
+
+  
 <script>
 (function () {
   // --- Configuración ---
